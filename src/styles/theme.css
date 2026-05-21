@@ -1,0 +1,36 @@
+/* Design tokens — temas claro/escuro via [data-theme] em <html>.
+   O modo escuro é o padrão. */
+
+:root,
+:root[data-theme='dark'] {
+  --bg: #0f0f13;
+  --text-primary: #f0eff5;
+  --text-muted: #7c7a8e;
+  --border: #2a2835;
+  --card-bg: #18171f;
+  --modal-bg: #1e1d27;
+  --input-bg: #13121a;
+  --tag-bg: #1e1d27;
+  --header-bg: rgba(15, 15, 19, 0.92);
+  --overlay: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme='light'] {
+  --bg: #f5f4f0;
+  --text-primary: #1a1a2e;
+  --text-muted: #888499;
+  --border: #e2e0f0;
+  --card-bg: #ffffff;
+  --modal-bg: #ffffff;
+  --input-bg: #f8f7ff;
+  --tag-bg: #f0eeff;
+  --header-bg: rgba(245, 244, 240, 0.92);
+  --overlay: rgba(0, 0, 0, 0.4);
+}
+
+:root {
+  --accent: #6366f1;
+  --danger: #ef4444;
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;
+  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+}

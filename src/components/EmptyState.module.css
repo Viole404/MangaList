@@ -1,0 +1,14 @@
+.empty {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.icon {
+  margin-bottom: 8px;
+  font-size: 40px;
+}
+
+.text {
+  margin: 0;
+}

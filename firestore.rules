@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// Cada usuário só acessa as próprias obras (lista privada por conta).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Dono do documento já existente (read/update/delete).
+    function isOwner() {
+      return signedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    match /obras/{obraId} {
+      allow read, delete: if isOwner();
+
+      // Criar: precisa estar logado e gravar o próprio uid em userId.
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.titulo is string
+        && request.resource.data.titulo.size() > 0;
+
+      // Atualizar: só o dono, e sem transferir a posse para outra conta.
+      allow update: if isOwner()
+        && request.resource.data.userId == resource.data.userId;
+    }
+
+    // Qualquer outra coleção é negada por padrão.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
