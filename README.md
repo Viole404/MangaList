@@ -2,7 +2,7 @@
 
 Seu catálogo pessoal de mangás e webtoons — PWA com React + Vite + Firebase.
 
-🔗 **App no ar:** https://organizador-de-obras-d695d.web.app
+🔗 **App no ar:** https://mangalist-app.web.app/
 
 ## Funcionalidades
 
