@@ -1,46 +1,54 @@
+import { useI18n } from '../i18n/I18nContext';
 import styles from './Header.module.css';
 
 export default function Header({
-  obrasCount,
   isDark,
   onToggleTheme,
   onAdd,
+  onOpenAccount,
   user,
   isLocal,
-  onLogout,
 }) {
+  const { t } = useI18n();
+  const name = user?.displayName || user?.email?.split('@')[0] || 'Usuário';
+  const initials = name.slice(0, 2).toUpperCase();
+
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
         <h1 className={styles.title}>MANGALIST</h1>
-        <span className={styles.count}>{obrasCount} obras</span>
       </div>
 
       <div className={styles.actions}>
         <button
           className={styles.iconBtn}
           onClick={onToggleTheme}
-          title={isDark ? 'Tema claro' : 'Tema escuro'}
-          aria-label="Alternar tema"
+          title={isDark ? t('theme_light') : t('theme_dark')}
+          aria-label={t('theme_toggle')}
         >
           {isDark ? '☀' : '☾'}
         </button>
 
         <button className={styles.addBtn} onClick={onAdd}>
-          + Adicionar
+          {t('header_add')}
         </button>
 
         {!isLocal && user && (
           <button
-            className={styles.iconBtn}
-            onClick={onLogout}
-            title={`Sair (${user.displayName || user.email || 'conta'})`}
-            aria-label="Sair"
+            className={styles.avatarBtn}
+            onClick={onOpenAccount}
+            title={t('account')}
+            aria-label={t('account')}
           >
             {user.photoURL ? (
-              <img className={styles.avatar} src={user.photoURL} alt="" />
+              <img
+                className={styles.avatar}
+                src={user.photoURL}
+                alt={name}
+                referrerPolicy="no-referrer"
+              />
             ) : (
-              '⎋'
+              <span className={styles.avatarInitials}>{initials}</span>
             )}
           </button>
         )}

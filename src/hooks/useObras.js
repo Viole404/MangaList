@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { isFirebaseConfigured } from '../lib/firebase';
+import { animateLayout } from '../lib/viewTransition';
 import * as dbApi from '../lib/db';
 
 /**
@@ -20,8 +21,12 @@ export function useObras(userId) {
     const unsub = dbApi.subscribeToObras(
       userId,
       (data) => {
-        setObras(data);
-        setLoading(false);
+        // Anima a reordenação quando o Firestore empurra mudanças (ex.: bater
+        // capítulo move o card para o topo, ordenado por `atualizadoEm`).
+        animateLayout(() => {
+          setObras(data);
+          setLoading(false);
+        });
       },
       (err) => {
         console.error('[MangaList] Falha ao ler obras do Firestore:', err);
@@ -36,10 +41,12 @@ export function useObras(userId) {
       if (isFirebaseConfigured) {
         return dbApi.addObra(userId, data);
       }
-      setObras((prev) => [
-        { ...dbApi.buildObraPayload(data), id: `local-${Date.now()}` },
-        ...prev,
-      ]);
+      animateLayout(() =>
+        setObras((prev) => [
+          { ...dbApi.buildObraPayload(data), id: `local-${Date.now()}` },
+          ...prev,
+        ])
+      );
       return undefined;
     },
     [userId]
@@ -49,8 +56,10 @@ export function useObras(userId) {
     if (isFirebaseConfigured) {
       return dbApi.updateObra(id, data);
     }
-    setObras((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, ...dbApi.buildObraPayload(data) } : o))
+    animateLayout(() =>
+      setObras((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, ...dbApi.buildObraPayload(data) } : o))
+      )
     );
     return undefined;
   }, []);
@@ -59,8 +68,10 @@ export function useObras(userId) {
     if (isFirebaseConfigured) {
       return dbApi.updateCapitulo(id, capitulo);
     }
-    setObras((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, capituloAtual: String(capitulo) } : o))
+    animateLayout(() =>
+      setObras((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, capituloAtual: String(capitulo) } : o))
+      )
     );
     return undefined;
   }, []);
@@ -69,7 +80,7 @@ export function useObras(userId) {
     if (isFirebaseConfigured) {
       return dbApi.deleteObra(id);
     }
-    setObras((prev) => prev.filter((o) => o.id !== id));
+    animateLayout(() => setObras((prev) => prev.filter((o) => o.id !== id)));
     return undefined;
   }, []);
 

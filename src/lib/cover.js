@@ -187,6 +187,37 @@ export async function searchManga(query, limit = 8) {
 }
 
 /**
+ * Capas das obras mais seguidas no MangaDex — usadas como pano de fundo
+ * decorativo da tela de login. Thumbnails de 256px (leves) e só conteúdo
+ * seguro/suggestive (nada explícito no fundo). Falha em silêncio (array vazio)
+ * para a tela cair no placeholder gerado por CSS.
+ */
+export async function fetchPopularCovers(limit = 48) {
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    params.append('includes[]', 'cover_art');
+    params.append('order[followedCount]', 'desc');
+    params.append('contentRating[]', 'safe');
+    params.append('contentRating[]', 'suggestive');
+    params.append('hasAvailableChapters', 'true');
+
+    const res = await mdFetch(`${API}/manga?${params.toString()}`);
+    if (!res.ok) return [];
+    const { data } = await res.json();
+    return (data || [])
+      .map((m) => {
+        const rel = m.relationships?.find((r) => r.type === 'cover_art');
+        const fileName = rel?.attributes?.fileName;
+        return fileName ? `${COVERS}/${m.id}/${fileName}.256.jpg` : null;
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Tenta achar a capa no MangaDex.
  * @returns {Promise<{url: string, matchedTitle: string|null} | null>}
  */

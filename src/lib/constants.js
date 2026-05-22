@@ -1,21 +1,22 @@
 import { SITES } from './urlParser';
 
-// Configuração de cada status (label + cores). As chaves batem com o campo
-// `status` salvo no Firestore.
+// Cor de cada status. As chaves batem com o campo `status` salvo no Firestore;
+// os rótulos vêm do i18n (chave `status.<key>`).
 export const STATUS_CONFIG = {
-  lendo: { label: 'Lendo', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
-  pausado: { label: 'Pausado', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-  concluído: { label: 'Concluído', color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
-  dropado: { label: 'Dropado', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  lendo: { color: '#22c55e' },
+  pausado: { color: '#f59e0b' },
+  concluído: { color: '#6366f1' },
+  dropado: { color: '#ef4444' },
 };
 
-// Tipos de obra disponíveis no formulário.
-export const TIPOS = [
-  { value: 'manga', label: 'Mangá' },
-  { value: 'webtoon', label: 'Webtoon' },
-  { value: 'manhua', label: 'Manhua' },
-  { value: 'manhwa', label: 'Manhwa' },
-];
+// Cor de cada tipo (rótulos vêm do i18n: `tipo.<key>`). A ordem aqui define a
+// ordem no seletor de tipo e nos filtros.
+export const TIPO_CONFIG = {
+  manga:   { color: '#818cf8' },
+  webtoon: { color: '#f97316' },
+  manhua:  { color: '#34d399' },
+  manhwa:  { color: '#fbbf24' },
+};
 
 const FALLBACK_COLOR = '#888';
 

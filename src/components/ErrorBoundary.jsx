@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { translations } from '../i18n/translations';
 
 /**
  * Captura erros de render para não deixar a tela em branco. Em vez disso,
@@ -20,6 +21,14 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
+      let lang = 'en';
+      try {
+        const saved = localStorage.getItem('mangalist_lang');
+        if (saved) lang = saved;
+      } catch {
+        /* ignore */
+      }
+      const d = translations[lang] || translations.en;
       return (
         <div
           style={{
@@ -36,7 +45,7 @@ export default class ErrorBoundary extends Component {
           }}
         >
           <div style={{ fontSize: 40 }}>😵</div>
-          <p style={{ margin: 0 }}>Algo deu errado ao carregar o app.</p>
+          <p style={{ margin: 0 }}>{d.error_generic}</p>
           <button
             onClick={() => window.location.reload()}
             style={{
@@ -49,7 +58,7 @@ export default class ErrorBoundary extends Component {
               cursor: 'pointer',
             }}
           >
-            Recarregar
+            {d.reload}
           </button>
         </div>
       );

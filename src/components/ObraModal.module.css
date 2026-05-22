@@ -7,6 +7,7 @@
   justify-content: center;
   background: var(--overlay);
   backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s var(--ease-out) both;
 }
 
 .sheet {
@@ -19,6 +20,17 @@
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: 20px 20px 0 0;
+  animation: slideUp 0.35s var(--ease-out) both;
+}
+
+/* Saída — espelha a entrada (overlay some, folha desliza pra baixo) */
+.overlayClosing {
+  pointer-events: none;
+  animation: fadeOut 0.22s var(--ease-out) both;
+}
+
+.sheetClosing {
+  animation: slideDown 0.24s var(--ease-out) both;
 }
 
 .head {
@@ -41,6 +53,15 @@
   background: none;
   border: none;
   cursor: pointer;
+  transition: color 0.15s, transform 0.12s var(--ease-spring);
+}
+
+.close:hover {
+  color: var(--text-primary);
+}
+
+.close:active {
+  transform: scale(0.85);
 }
 
 .parser {
@@ -58,10 +79,29 @@
   font-weight: 600;
   white-space: nowrap;
   color: #fff;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
   border: none;
   border-radius: 10px;
   cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.12s var(--ease-spring),
+    box-shadow 0.2s;
+}
+
+.parseBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  box-shadow: 0 3px 14px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.parseBtn:active:not(:disabled) {
+  transform: scale(0.95);
+  opacity: 1;
+}
+
+.parseBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .parseError {
@@ -130,10 +170,12 @@
   border: 1.5px solid var(--border);
   border-radius: 10px;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .textarea {
@@ -163,6 +205,15 @@
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 8px;
   cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s var(--ease-spring);
+}
+
+.coverBtn:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.coverBtn:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .coverBtn:disabled {
@@ -244,11 +295,12 @@
   object-fit: cover;
   border-radius: 8px;
   border: 1.5px solid var(--border);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, transform 0.2s var(--ease-out);
 }
 
 .result:hover .resultImg {
   border-color: var(--accent);
+  transform: scale(1.05);
 }
 
 .resultTitle {
@@ -269,6 +321,11 @@
   background: none;
   border: none;
   cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.linkBtn:hover {
+  opacity: 0.75;
 }
 
 .submit {
@@ -279,10 +336,26 @@
   font-weight: 700;
   letter-spacing: 0.3px;
   color: #fff;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
   border: none;
   border-radius: 12px;
   cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.12s var(--ease-spring),
+    box-shadow 0.2s;
+}
+
+.submit:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.submit:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 1;
+  box-shadow: none;
 }
 
 .submit:disabled {
@@ -299,4 +372,13 @@
   border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
   border-radius: 12px;
   cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s var(--ease-spring);
+}
+
+.deleteBtn:hover {
+  opacity: 0.8;
+}
+
+.deleteBtn:active {
+  transform: scale(0.97);
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { parseUrl, SITES } from '../lib/urlParser';
 import { fetchCover, searchManga } from '../lib/cover';
-import { STATUS_CONFIG, TIPOS, getSiteColor } from '../lib/constants';
+import { STATUS_CONFIG, TIPO_CONFIG, getSiteColor } from '../lib/constants';
+import { useI18n } from '../i18n/I18nContext';
 import styles from './ObraModal.module.css';
 
 const EMPTY_FORM = {
@@ -18,7 +19,8 @@ const EMPTY_FORM = {
   urlOrigem: '',
 };
 
-export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onClose }) {
+export default function ObraModal({ obra, initialUrl = '', closing = false, onSave, onDelete, onClose }) {
+  const { t } = useI18n();
   const isEdit = Boolean(obra?.id);
   const [url, setUrl] = useState(initialUrl);
   const [parseResult, setParseResult] = useState(null);
@@ -79,7 +81,7 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
     (rawUrl) => {
       const result = parseUrl(rawUrl);
       if (!result.success) {
-        setParseError(result.error);
+        setParseError(result.errorKey ? t(result.errorKey, result.errorParams) : '');
         setParseResult(null);
         return;
       }
@@ -97,7 +99,7 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
       // Tenta a capa automaticamente assim que extrai os dados.
       runCoverFetch(result.title, result.mangaId);
     },
-    [runCoverFetch]
+    [runCoverFetch, t]
   );
 
   // URL vinda do compartilhamento (share_target): pré-preenche e já tenta extrair.
@@ -120,7 +122,7 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
   }
 
   function handleDelete() {
-    if (window.confirm(`Excluir "${form.titulo}"? Esta ação não pode ser desfeita.`)) {
+    if (window.confirm(t('delete_confirm', { titulo: form.titulo }))) {
       onDelete(obra.id);
       onClose();
     }
@@ -130,20 +132,23 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
 
   return (
     <div
-      className={styles.overlay}
+      className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className={styles.sheet} style={{ '--site-color': siteColor }}>
+      <div
+        className={`${styles.sheet} ${closing ? styles.sheetClosing : ''}`}
+        style={{ '--site-color': siteColor }}
+      >
         <div className={styles.head}>
-          <h2 className={styles.headTitle}>{isEdit ? 'Editar obra' : 'Adicionar obra'}</h2>
-          <button className={styles.close} onClick={onClose} aria-label="Fechar">
+          <h2 className={styles.headTitle}>{isEdit ? t('modal_edit_title') : t('modal_add_title')}</h2>
+          <button className={styles.close} onClick={onClose} aria-label={t('close')}>
             ×
           </button>
         </div>
 
         {!isEdit && (
           <div className={styles.parser}>
-            <label className={styles.label}>Cole a URL do capítulo</label>
+            <label className={styles.label}>{t('paste_url_label')}</label>
             <div className={styles.parserRow}>
               <input
                 className={`${styles.input} ${styles.urlInput}`}
@@ -154,10 +159,10 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
                   setParseResult(null);
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && applyParse(url)}
-                placeholder="ex: sakuramangas.org/obras/chainsaw-man/97"
+                placeholder={t('url_placeholder')}
               />
               <button className={styles.parseBtn} onClick={() => applyParse(url)}>
-                Extrair
+                {t('extract')}
               </button>
             </div>
             {parseError && <p className={styles.parseError}>{parseError}</p>}
@@ -165,8 +170,8 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
               <div className={styles.parseOk}>
                 <span>✓ {parseResult.site}</span>
                 {parseResult.title && <span>&quot;{parseResult.title}&quot;</span>}
-                {parseResult.chapter && <span>Cap. {parseResult.chapter}</span>}
-                {parseResult.needsManualTitle && <span>⚠ Informe o título manualmente</span>}
+                {parseResult.chapter && <span>{t('cap_short')} {parseResult.chapter}</span>}
+                {parseResult.needsManualTitle && <span>{t('manual_title_warn')}</span>}
               </div>
             )}
             <div className={styles.divider} />
@@ -175,32 +180,32 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
 
         <div className={styles.fields}>
           <div>
-            <label className={styles.label}>Título *</label>
+            <label className={styles.label}>{t('field_title')}</label>
             <input
               className={styles.input}
               value={form.titulo}
               onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
-              placeholder="Nome da obra"
+              placeholder={t('title_placeholder')}
             />
           </div>
 
           <div className={styles.row}>
             <div className={styles.col}>
-              <label className={styles.label}>Tipo</label>
+              <label className={styles.label}>{t('field_type')}</label>
               <select
                 className={styles.input}
                 value={form.tipo}
                 onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
               >
-                {TIPOS.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {Object.keys(TIPO_CONFIG).map((k) => (
+                  <option key={k} value={k}>
+                    {t(`tipo.${k}`)}
                   </option>
                 ))}
               </select>
             </div>
             <div className={styles.col}>
-              <label className={styles.label}>Site</label>
+              <label className={styles.label}>{t('field_site')}</label>
               <select
                 className={styles.input}
                 value={form.siteKey}
@@ -220,7 +225,7 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
 
           <div className={styles.row}>
             <div className={styles.col}>
-              <label className={styles.label}>Capítulo atual</label>
+              <label className={styles.label}>{t('field_chapter')}</label>
               <input
                 className={styles.input}
                 value={form.capituloAtual}
@@ -229,21 +234,21 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
               />
             </div>
             <div className={styles.col}>
-              <label className={styles.label}>Status</label>
+              <label className={styles.label}>{t('field_status')}</label>
               <select
                 className={styles.input}
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
               >
-                {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                {Object.keys(STATUS_CONFIG).map((k) => (
                   <option key={k} value={k}>
-                    {v.label}
+                    {t(`status.${k}`)}
                   </option>
                 ))}
               </select>
             </div>
             <div className={styles.colNota}>
-              <label className={styles.label}>Nota</label>
+              <label className={styles.label}>{t('field_rating')}</label>
               <input
                 className={styles.input}
                 value={form.nota ?? ''}
@@ -257,25 +262,25 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
           </div>
 
           <div>
-            <label className={styles.label}>Gêneros (separados por vírgula)</label>
+            <label className={styles.label}>{t('field_genres')}</label>
             <input
               className={styles.input}
               defaultValue={form.generos?.join(', ')}
               onChange={handleGeneros}
-              placeholder="ação, fantasia, comédia"
+              placeholder={t('genres_placeholder')}
             />
           </div>
 
           <div>
             <div className={styles.labelRow}>
-              <label className={styles.label}>Capa (opcional)</label>
+              <label className={styles.label}>{t('field_cover')}</label>
               <button
                 type="button"
                 className={styles.coverBtn}
                 onClick={openPicker}
                 disabled={coverStatus === 'loading'}
               >
-                {coverStatus === 'loading' ? 'Buscando…' : '🔍 Buscar no MangaDex'}
+                {coverStatus === 'loading' ? t('cover_searching') : t('cover_search_md')}
               </button>
             </div>
             <div className={styles.coverRow}>
@@ -291,18 +296,15 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
                 className={styles.input}
                 value={form.capa || ''}
                 onChange={(e) => setForm((f) => ({ ...f, capa: e.target.value }))}
-                placeholder="https://... ou busque no MangaDex"
+                placeholder={t('cover_input_placeholder')}
               />
             </div>
 
             {coverStatus === 'found' && (
-              <p className={styles.coverFound}>✓ Capa: {coverMatch || 'definida'}</p>
+              <p className={styles.coverFound}>{t('cover_found', { name: coverMatch || t('cover_set') })}</p>
             )}
             {coverStatus === 'notfound' && !pickerOpen && (
-              <p className={styles.coverMuted}>
-                Não achei automaticamente. Clique em “Buscar no MangaDex” — para webtoons,
-                tente o nome em inglês.
-              </p>
+              <p className={styles.coverMuted}>{t('cover_notfound')}</p>
             )}
 
             {pickerOpen && (
@@ -318,7 +320,7 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
                         doSearch(coverQuery);
                       }
                     }}
-                    placeholder="Nome da obra (tente em inglês p/ webtoons)"
+                    placeholder={t('cover_query_placeholder')}
                   />
                   <button
                     type="button"
@@ -326,19 +328,17 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
                     onClick={() => doSearch(coverQuery)}
                     disabled={searching || !coverQuery.trim()}
                   >
-                    Buscar
+                    {t('search_btn')}
                   </button>
                 </div>
 
-                {searching && <p className={styles.coverMuted}>Buscando…</p>}
+                {searching && <p className={styles.coverMuted}>{t('cover_searching')}</p>}
 
                 {!searching &&
                   coverResults.length > 0 &&
                   usedQuery &&
                   usedQuery.toLowerCase() !== coverQuery.trim().toLowerCase() && (
-                    <p className={styles.coverMuted}>
-                      Sem resultado para o título original — mostrando: <em>{usedQuery}</em>
-                    </p>
+                    <p className={styles.coverMuted}>{t('cover_no_orig', { q: usedQuery })}</p>
                   )}
 
                 {!searching && coverResults.length > 0 && (
@@ -368,9 +368,7 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
                 )}
 
                 {!searching && coverResults.length === 0 && coverQuery.trim() && (
-                  <p className={styles.coverMuted}>
-                    Nada encontrado para “{coverQuery}”. Tente o nome em inglês ou o título original.
-                  </p>
+                  <p className={styles.coverMuted}>{t('cover_none_for', { q: coverQuery })}</p>
                 )}
 
                 <button
@@ -378,30 +376,30 @@ export default function ObraModal({ obra, initialUrl = '', onSave, onDelete, onC
                   className={styles.linkBtn}
                   onClick={() => setPickerOpen(false)}
                 >
-                  Fechar busca
+                  {t('close_search')}
                 </button>
               </div>
             )}
           </div>
 
           <div>
-            <label className={styles.label}>Notas livres</label>
+            <label className={styles.label}>{t('field_notes')}</label>
             <textarea
               className={`${styles.input} ${styles.textarea}`}
               value={form.notasLivres}
               onChange={(e) => setForm((f) => ({ ...f, notasLivres: e.target.value }))}
-              placeholder="Qualquer anotação..."
+              placeholder={t('notes_placeholder')}
               rows={3}
             />
           </div>
 
           <button className={styles.submit} onClick={handleSubmit} disabled={!form.titulo.trim()}>
-            {isEdit ? 'Salvar alterações' : 'Adicionar obra'}
+            {isEdit ? t('save_changes') : t('add_obra')}
           </button>
 
           {isEdit && onDelete && (
             <button className={styles.deleteBtn} onClick={handleDelete}>
-              Excluir obra
+              {t('delete_obra')}
             </button>
           )}
         </div>

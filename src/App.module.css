@@ -8,10 +8,37 @@
   padding: 16px 16px 80px;
 }
 
+/* Painel de filtros — desliza para baixo da barra de busca */
+.filterPanel {
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+  animation: fadeInUp 0.22s var(--ease-out) both;
+}
+
+/* Grade de cards — 2 colunas fixas no mobile */
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Desktop: expande o container e usa tantas colunas quanto cabem */
+@media (min-width: 640px) {
+  .main {
+    max-width: 100%;
+    padding: 16px 32px 80px;
+  }
+
+  .list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+}
+
+/* Estados de vazio/carregando devem ocupar toda a largura da grade */
+.fullSpan {
+  grid-column: 1 / -1;
 }
 
 .centered {

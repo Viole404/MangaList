@@ -27,6 +27,27 @@ service cloud.firestore {
         && request.resource.data.userId == resource.data.userId;
     }
 
+    // Perfil mínimo do usuário — guarda o token de compartilhamento da lista.
+    // Só o próprio dono lê e escreve.
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Lista pública compartilhada por link.
+    // - get: qualquer um com o link (o token) lê aquele documento específico.
+    // - list: proibido — ninguém pode varrer a coleção / descobrir listas alheias.
+    // - escrita: só o dono (ownerId == uid), inclusive na atualização ao vivo.
+    match /publicLists/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
     // Qualquer outra coleção é negada por padrão.
     match /{document=**} {
       allow read, write: if false;

@@ -1,0 +1,6 @@
+# MangaList
+User-agent: *
+Allow: /
+
+# Listas compartilhadas são privadas (acesso só por link) — fora dos buscadores.
+Disallow: /lista/

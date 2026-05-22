@@ -1,22 +1,32 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { STATUS_CONFIG, getSiteColor, getInitials } from '../lib/constants';
+import { useI18n } from '../i18n/I18nContext';
 import styles from './ObraCard.module.css';
 
-function ObraCard({ obra, onEdit, onUpdateCap }) {
+function ObraCard({ obra, onEdit = () => {}, onUpdateCap = () => {}, style, readOnly = false }) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [capInput, setCapInput] = useState(obra.capituloAtual);
+  const [pulse, setPulse] = useState(false);
   const inputRef = useRef(null);
+  const prevCapRef = useRef(obra.capituloAtual);
 
-  const status = STATUS_CONFIG[obra.status] || STATUS_CONFIG.lendo;
+  const statusKey = STATUS_CONFIG[obra.status] ? obra.status : 'lendo';
+  const status = STATUS_CONFIG[statusKey];
+  const statusLabel = t(`status.${statusKey}`);
   const siteColor = getSiteColor(obra.siteKey);
 
   useEffect(() => {
     if (editing && inputRef.current) inputRef.current.focus();
   }, [editing]);
 
-  // Mantém o input sincronizado quando o capítulo muda por fora (botões +/-).
   useEffect(() => {
     setCapInput(obra.capituloAtual);
+    // Dispara o pulse quando o capítulo muda de verdade (não no primeiro render).
+    if (prevCapRef.current !== obra.capituloAtual) {
+      prevCapRef.current = obra.capituloAtual;
+      setPulse(true);
+    }
   }, [obra.capituloAtual]);
 
   function handleCapSave() {
@@ -34,12 +44,12 @@ function ObraCard({ obra, onEdit, onUpdateCap }) {
       style={{
         '--site-color': siteColor,
         '--status-color': status.color,
-        '--status-bg': status.bg,
+        viewTransitionName: `obra-${obra.id}`,
+        ...style,
       }}
     >
-      <div className={styles.accent} />
-
-      <div className={styles.cover}>
+      {/* Capa */}
+      <div className={styles.coverWrap}>
         {obra.capa ? (
           <img
             className={styles.coverImg}
@@ -49,76 +59,82 @@ function ObraCard({ obra, onEdit, onUpdateCap }) {
             referrerPolicy="no-referrer"
           />
         ) : (
-          getInitials(obra.titulo)
-        )}
-      </div>
-
-      <div className={styles.info}>
-        <div className={styles.titleRow}>
-          <span className={styles.titulo}>{obra.titulo}</span>
-          <span className={styles.statusBadge}>{status.label}</span>
-        </div>
-
-        <div className={styles.metaRow}>
-          <span className={styles.siteBadge}>{obra.site}</span>
-          {obra.nota != null && <span className={styles.nota}>★ {obra.nota}/10</span>}
-        </div>
-
-        {obra.generos?.length > 0 && (
-          <div className={styles.generos}>
-            {obra.generos.slice(0, 3).map((g) => (
-              <span key={g} className={styles.genero}>
-                {g}
-              </span>
-            ))}
+          <div className={styles.coverPlaceholder}>
+            <span className={styles.coverInitials}>{getInitials(obra.titulo)}</span>
           </div>
         )}
 
-        {obra.notasLivres && <p className={styles.notas}>&quot;{obra.notasLivres}&quot;</p>}
-      </div>
+        {/* Gradiente escurecendo a parte inferior da capa */}
+        <div className={styles.coverGradient} />
 
-      <div className={styles.capCol}>
-        <span className={styles.capLabel}>CAP.</span>
-        {editing ? (
-          <input
-            ref={inputRef}
-            className={styles.capInput}
-            value={capInput}
-            onChange={(e) => setCapInput(e.target.value)}
-            onBlur={handleCapSave}
-            onKeyDown={(e) => e.key === 'Enter' && handleCapSave()}
-          />
-        ) : (
+        {/* Badge de status — canto superior esquerdo */}
+        <span className={styles.statusBadge}>{statusLabel.toUpperCase()}</span>
+
+        {/* Botão de edição — canto superior direito (oculto na lista pública) */}
+        {!readOnly && (
           <button
-            className={styles.capValue}
-            onClick={() => setEditing(true)}
-            title="Clique para editar o capítulo"
+            className={styles.editBtn}
+            onClick={() => onEdit(obra)}
+            title={t('card_edit')}
+            aria-label={t('card_edit')}
           >
-            {obra.capituloAtual}
+            ⋮
           </button>
         )}
-        <div className={styles.capButtons}>
+      </div>
+
+      {/* Informações abaixo da capa */}
+      <div className={styles.info}>
+        <p className={styles.titulo}>{obra.titulo}</p>
+
+        {readOnly ? (
+          <div className={styles.capRow}>
+            <span className={styles.capStatic}>{t('cap_short')} {obra.capituloAtual}</span>
+          </div>
+        ) : (
+        <div className={styles.capRow}>
           <button
             className={styles.navBtn}
             onClick={() => onUpdateCap(obra.id, String(Math.max(1, cap - 1)))}
-            title="Capítulo anterior"
+            title={t('card_prev')}
             disabled={!Number.isFinite(cap)}
+            aria-label={t('card_prev')}
           >
             −
           </button>
+
+          {editing ? (
+            <input
+              ref={inputRef}
+              className={styles.capInput}
+              value={capInput}
+              onChange={(e) => setCapInput(e.target.value)}
+              onBlur={handleCapSave}
+              onKeyDown={(e) => e.key === 'Enter' && handleCapSave()}
+              aria-label={t('card_chapter_aria')}
+            />
+          ) : (
+            <button
+              className={`${styles.capValue} ${pulse ? styles.pulse : ''}`}
+              onClick={() => setEditing(true)}
+              onAnimationEnd={() => setPulse(false)}
+              title={t('card_edit_chapter')}
+            >
+              {obra.capituloAtual}
+            </button>
+          )}
+
           <button
             className={`${styles.navBtn} ${styles.navBtnNext}`}
             onClick={() => onUpdateCap(obra.id, String((Number.isFinite(cap) ? cap : 0) + 1))}
-            title="Próximo capítulo"
+            title={t('card_next')}
+            aria-label={t('card_next')}
           >
             +
           </button>
         </div>
+        )}
       </div>
-
-      <button className={styles.editBtn} onClick={() => onEdit(obra)} title="Editar obra">
-        ✎
-      </button>
     </div>
   );
 }

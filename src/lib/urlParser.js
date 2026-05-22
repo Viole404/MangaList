@@ -7,7 +7,7 @@ const SITES = {
   sakura: {
     name: 'Sakura Mangás',
     type: 'manga',
-    color: '#e8547a',
+    color: '#ec4899', // rosa forte
     domains: ['sakuramangas.com', 'sakuramangas.org'],
     // ex: /obras/hatori-to-furuta-no-hinichijou-sahanji/12/
     // ex: /manga/chainsaw-man/capitulo-20
@@ -21,7 +21,7 @@ const SITES = {
   kitsune: {
     name: 'Kitsune Yako',
     type: 'webtoon',
-    color: '#f97316',
+    color: '#a855f7', // roxo forte
     domains: ['kitsuneyako.com', 'kitsuneyako.net', 'kitsuneyako.org'],
     // ex: /necromante-o-rei-da-calamidade-capitulo-273/
     // ex: /serie/titulo/12/
@@ -36,7 +36,7 @@ const SITES = {
   mangadex: {
     name: 'MangaDex',
     type: 'manga',
-    color: '#f87171',
+    color: '#f97316', // laranja forte
     domains: ['mangadex.org'],
     // ex: /title/uuid/common-and-widespread  → extrai título do slug
     // ex: /chapter/uuid                      → só UUID, pede título manual
@@ -86,7 +86,7 @@ function detectSite(hostname) {
  */
 export function parseUrl(rawUrl) {
   if (!rawUrl || !rawUrl.trim()) {
-    return { success: false, error: 'URL vazia.' };
+    return { success: false, errorKey: 'urlerr_empty' };
   }
 
   let url;
@@ -96,14 +96,15 @@ export function parseUrl(rawUrl) {
       : 'https://' + rawUrl.trim();
     url = new URL(normalized);
   } catch {
-    return { success: false, error: 'URL inválida. Verifique e tente novamente.' };
+    return { success: false, errorKey: 'urlerr_invalid' };
   }
 
   const site = detectSite(url.hostname);
   if (!site) {
     return {
       success: false,
-      error: `Site não reconhecido (${url.hostname}). Sites suportados: Sakura Mangás, Kitsune Yako, MangaDex.`,
+      errorKey: 'urlerr_site',
+      errorParams: { host: url.hostname },
     };
   }
 
@@ -142,7 +143,8 @@ export function parseUrl(rawUrl) {
   if (!title && !needsManualTitle) {
     return {
       success: false,
-      error: `Não foi possível extrair o título desta URL do ${site.name}. Tente a URL do capítulo diretamente.`,
+      errorKey: 'urlerr_notitle',
+      errorParams: { site: site.name },
     };
   }
 
@@ -155,7 +157,7 @@ export function parseUrl(rawUrl) {
     chapter,
     mangaId,
     needsManualTitle,
-    error: null,
+    errorKey: null,
   };
 }
 
